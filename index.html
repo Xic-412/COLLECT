@@ -1,1 +1,218 @@
-geugu
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudVault Pro - 正式雲端版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .tab-active { background: #3b82f6; color: white; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        .price-badge { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        input { background: rgba(15, 23, 42, 0.9) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: white !important; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="app" class="max-w-6xl mx-auto p-4 md:p-6">
+        <nav class="flex justify-between items-center mb-6 glass-panel p-4 rounded-2xl">
+            <h1 class="text-xl font-black text-blue-400">CLOUDVAULT PRO</h1>
+            <div id="user-info" class="hidden flex items-center gap-4">
+                <span id="user-email" class="text-xs text-blue-300 bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-500/20"></span>
+                <button id="logout-btn" class="text-gray-400 hover:text-red-400 text-sm font-bold">登出</button>
+            </div>
+        </nav>
+
+        <div id="login-screen" class="text-center py-40 glass-panel rounded-3xl">
+            <h2 class="text-3xl font-bold mb-8">歡迎使用私有雲端庫</h2>
+            <button id="google-login-btn" class="bg-white text-gray-900 px-8 py-4 rounded-xl font-black flex items-center gap-3 mx-auto hover:bg-gray-100 transition">
+                <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
+                使用 Google 帳號登入
+            </button>
+        </div>
+
+        <div id="main-interface" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <aside class="space-y-3">
+                <button onclick="switchTab('images')" id="btn-images" class="w-full flex items-center gap-3 p-4 rounded-xl font-bold glass-panel tab-active">圖片檔案室</button>
+                <button onclick="switchTab('products')" id="btn-products" class="w-full flex items-center gap-3 p-4 rounded-xl font-bold glass-panel">商品分析儀</button>
+            </aside>
+
+            <main class="lg:col-span-3 space-y-6">
+                <section id="view-images" class="space-y-6">
+                    <div class="glass-panel p-8 rounded-3xl">
+                        <h3 class="text-xl font-bold mb-4 text-blue-400">上傳新資產</h3>
+                        <div id="drop-zone" class="border-2 border-dashed border-gray-700 rounded-2xl p-10 text-center hover:border-blue-500 cursor-pointer">
+                            <input type="file" id="file-input" class="hidden" accept="image/*">
+                            <p class="text-gray-400">點擊上傳或在此處貼上 (Ctrl+V)</p>
+                            <div id="preview-container" class="mt-4 hidden">
+                                <img id="upload-preview" class="max-h-48 mx-auto rounded-lg shadow-xl">
+                            </div>
+                        </div>
+                        <input type="text" id="img-desc" placeholder="輸入圖片備註..." class="w-full mt-4 p-4 rounded-xl">
+                        <button id="save-img-btn" class="w-full mt-4 bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-500">儲存至雲端</button>
+                    </div>
+                    <div id="image-gallery" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+                </section>
+
+                <section id="view-products" class="hidden space-y-6">
+                    <div class="glass-panel p-8 rounded-3xl">
+                        <h3 class="text-xl font-bold mb-4 text-green-400">商品錄入</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="prod-name" placeholder="商品名稱" class="p-4 rounded-xl">
+                            <input type="number" id="prod-price" placeholder="價格" class="p-4 rounded-xl">
+                            <input type="url" id="prod-url" placeholder="商品網址" class="p-4 rounded-xl md:col-span-2">
+                        </div>
+                        <button id="save-prod-btn" class="w-full mt-4 bg-green-600 py-4 rounded-xl font-bold hover:bg-green-500">確認入庫</button>
+                    </div>
+                    <div class="glass-panel rounded-3xl overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-white/5 text-xs text-gray-400 uppercase">
+                                <tr><th class="p-6">品名</th><th class="p-6">價格</th><th class="p-6">操作</th></tr>
+                            </thead>
+                            <tbody id="product-list"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-4 rounded-2xl shadow-2xl translate-y-32 transition-all duration-500 z-[200]"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 您的連線資訊
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMmLbsA7sCkvLcvTnLiTp479FK-2x2OgI",
+            authDomain: "collect-c1061.firebaseapp.com",
+            projectId: "collect-c1061",
+            storageBucket: "collect-c1061.firebasestorage.app",
+            messagingSenderId: "388393924772",
+            appId: "1:388393924772:web:47e559b3b2175c6ffc8e31"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUid = null;
+        let unsubImages, unsubProducts;
+
+        // 驗證狀態監聽
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUid = user.uid;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-interface').classList.remove('hidden');
+                document.getElementById('user-info').classList.remove('hidden');
+                document.getElementById('user-email').textContent = user.email;
+                startListeners(user.uid);
+            } else {
+                currentUid = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('main-interface').classList.add('hidden');
+                document.getElementById('user-info').classList.add('hidden');
+            }
+        });
+
+        // 登入登出
+        document.getElementById('google-login-btn').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+        // 數據監聽器
+        function startListeners(uid) {
+            const imgQuery = query(collection(db, 'users', uid, 'images'), orderBy('createdAt', 'desc'));
+            unsubImages = onSnapshot(imgQuery, snap => {
+                const gallery = document.getElementById('image-gallery');
+                gallery.innerHTML = '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    const div = document.createElement('div');
+                    div.className = "glass-panel p-2 rounded-2xl relative group";
+                    div.innerHTML = `<img src="${data.base64}" class="w-full h-40 object-cover rounded-xl bg-black/20">
+                                     <p class="text-[10px] p-1 truncate text-gray-400">${data.desc || ''}</p>
+                                     <button onclick="deleteData('images','${d.id}')" class="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition">X</button>`;
+                    gallery.appendChild(div);
+                });
+            });
+
+            const prodQuery = query(collection(db, 'users', uid, 'products'), orderBy('createdAt', 'desc'));
+            unsubProducts = onSnapshot(prodQuery, snap => {
+                const list = document.getElementById('product-list');
+                list.innerHTML = '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    const tr = document.createElement('tr');
+                    tr.className = "border-t border-white/5 hover:bg-white/5";
+                    tr.innerHTML = `<td class="p-6 text-sm font-bold">${data.url ? `<a href="${data.url}" target="_blank" class="text-blue-400">${data.name}</a>` : data.name}</td>
+                                    <td class="p-6"><span class="price-badge px-3 py-1 rounded-full text-xs">$ ${data.price}</span></td>
+                                    <td class="p-6"><button onclick="deleteData('products','${d.id}')" class="text-red-400 text-xs">移除</button></td>`;
+                    list.appendChild(tr);
+                });
+            });
+        }
+
+        // 圖片上傳 (Base64)
+        const handleFile = (file) => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('upload-preview').src = e.target.result;
+                document.getElementById('preview-container').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        };
+
+        document.getElementById('drop-zone').onclick = () => document.getElementById('file-input').click();
+        document.getElementById('file-input').onchange = (e) => handleFile(e.target.files[0]);
+        window.addEventListener('paste', (e) => { if(e.clipboardData.files[0]) handleFile(e.clipboardData.files[0]); });
+
+        document.getElementById('save-img-btn').onclick = async () => {
+            const base64 = document.getElementById('upload-preview').src;
+            const desc = document.getElementById('img-desc').value;
+            if(!base64 || !currentUid) return showToast("請選擇圖片");
+            await addDoc(collection(db, 'users', currentUid, 'images'), { base64, desc, createdAt: serverTimestamp() });
+            document.getElementById('preview-container').classList.add('hidden');
+            document.getElementById('img-desc').value = '';
+            showToast("圖片上傳成功");
+        };
+
+        // 商品紀錄
+        document.getElementById('save-prod-btn').onclick = async () => {
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+            const url = document.getElementById('prod-url').value;
+            if(!name || !currentUid) return showToast("請填寫品名");
+            await addDoc(collection(db, 'users', currentUid, 'products'), { name, price, url, createdAt: serverTimestamp() });
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-url').value = '';
+            showToast("商品已存檔");
+        };
+
+        // 刪除功能
+        window.deleteData = async (col, id) => {
+            if(confirm("確定刪除？")) await deleteDoc(doc(db, 'users', currentUid, col, id));
+        };
+
+        // 工具
+        window.switchTab = (tab) => {
+            document.getElementById('view-images').classList.toggle('hidden', tab !== 'images');
+            document.getElementById('view-products').classList.toggle('hidden', tab !== 'products');
+            document.getElementById('btn-images').classList.toggle('tab-active', tab === 'images');
+            document.getElementById('btn-products').classList.toggle('tab-active', tab === 'products');
+        };
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.remove('translate-y-32');
+            setTimeout(() => t.classList.add('translate-y-32'), 3000);
+        }
+    </script>
+</body>
+</html>
